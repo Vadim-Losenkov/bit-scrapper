@@ -4,7 +4,7 @@ from Bip39Gen import Bip39Gen
 from check import check_balance, last_seen
 from btcaddr import btc_solution
 import threading
-# from multiprocessing.pool import ThreadPool as Pool
+from multiprocessing.pool import ThreadPool as Pool
 import argparse
 import requests
 import os
@@ -148,38 +148,42 @@ def main():
             addr = wallet.address.__dict__["mainnet"].__dict__["pubaddr1"]
             balance = int(check_balance(addr))
             # sendBotMsg(f"<b>Address:</b>\n<i>{addr}</i>\n\n<b>Balance:</b> <i>{balance}</i>\n\n<b>Private key:</b>\n<i>{prv}</i>\n\n<b>Last seen:</b> <i>{last_seen(addr)}</i>")
+            sys.stdout.write(f"{bcolors.RED}{addr} : {prv} : {balance} BTC\r")
+            sys.stdout.flush()
             with open("results_key/all.txt", "a") as w:
                         w.write(
                             f"Address: {addr} | Balance: {balance} | Private key: {prv} | Last seen: {last_seen(addr)}\n"
                         )
             if balance == 0:
+                # sys.stdout.write(f"{bcolors.RED}{addr} : {prv} : {balance} BTC\r")
+                # sys.stdout.flush()
                 with open("results_key/dry.txt", "a") as w:
                             w.write(
                                 f"Address: {addr} | Balance: {balance} | Private key: {prv}\n"
                             )
-                            print(f"{bcolors.RED}{addr} : {prv} : {balance} BTC")
                 if last_seen(addr) == 0:
                     if args.savedry:
+                        # sys.stdout.write(f"{bcolors.RED}{addr} : {prv} : {balance} BTC\r")
+                        # sys.stdout.flush()
                         with open("results_key/dry.txt", "a") as w:
                             w.write(
                                 f"Address: {addr} | Balance: {balance} | Private key: {prv}\n"
                             )
-                    print(f"{bcolors.RED}{addr} : {prv} : {balance} BTC")
                 else:
+                    sys.stdout.write(f"{bcolors.YELLOW}{addr} : {prv} : {balance} BTC\r")
+                    sys.stdout.flush()
                     with open("results_key/moist.txt", "a") as w:
                         w.write(
                             f"Address: {addr} | Balance: {balance} | Private key: {prv} | Last seen: {last_seen(addr)}\n"
                         )
-                    print(
-                        f"{bcolors.YELLOW}{last_seen(addr)} : {balance} : {prv} : {addr}"
-                    )
             else:
+                sys.stdout.write(f"{last_seen(addr)} {bcolors.OK} : {balance} : {prv} : {addr}\r")
+                sys.stdout.flush()
                 sendBotMsg(f"<b>Address:</b>\n<i>{addr}</i>\n\n<b>Balance:</b> <i>{balance}</i>\n\n<b>Private key:</b>\n<i>{prv}</i>\n\n<b>Last seen:</b> <i>{last_seen(addr)}</i>")
                 with open("results_key/wet.txt", "a") as w:
                     w.write(
                         f"Address: {addr} | Balance: {balance} | Private key: {prv} | Last seen: {last_seen(addr)}\n"
                     )
-                print(f"{last_seen(addr)} {bcolors.OK} : {balance} : {prv} : {addr}")
 def check():
     # time.sleep(1)
     Info.total += 1
@@ -202,7 +206,7 @@ def check():
         else:
             # print(f'{addr} Empty!')
             
-            sys.stdout.write(f'[({Info.found}){Info.total:10}] {addr} empty\r')
+            sys.stdout.write(f'{bcolors.RED}[({Info.found}){Info.total:10}] {addr} empty\r')
             sys.stdout.flush()
             with open('results_words/dry.txt', 'a') as w:
                     w.write(
@@ -226,9 +230,9 @@ if __name__ == "__main__":
     elif btc_solution.starter_answer == btc_solution.btc_correct_words:
         worker()
     
-    # threads = args.threads
-    # pool = Pool(threads)
-    # for _ in range(threads):
-    #     pool.apply_async(main, ())
-    # pool.close()
-    # pool.join()
+    threads = args.threads
+    pool = Pool(threads)
+    for _ in range(threads):
+        pool.apply_async(main, ())
+    pool.close()
+    pool.join()
